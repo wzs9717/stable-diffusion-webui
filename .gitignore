@@ -33,3 +33,13 @@ notification.mp3
 /test/stdout.txt
 /test/stderr.txt
 /cache.json
+/git
+/python
+/python/Lib
+/python/**/*
+*.exe
+test.py
+/localizations
+*.dll
+*.bat
+SDWebUIStartup.pdb
