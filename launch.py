@@ -217,6 +217,7 @@ def run_extensions_installers(settings_file):
 
 
 def prepare_environment():
+    #parse all paremeters like repo url. commit hash
     global skip_install
 
     torch_command = os.environ.get('TORCH_COMMAND', "pip install torch==1.13.1+cu117 torchvision==0.14.1+cu117 --extra-index-url https://download.pytorch.org/whl/cu117")
@@ -264,7 +265,8 @@ def prepare_environment():
 
     print(f"Python {sys.version}")
     print(f"Commit hash: {commit}")
-
+    
+    #install requirements and clone repos
     if reinstall_torch or not is_installed("torch") or not is_installed("torchvision"):
         run(f'"{python}" -m {torch_command}', "Installing torch and torchvision", "Couldn't install torch", live=True)
 

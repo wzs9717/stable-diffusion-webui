@@ -10,6 +10,9 @@ queue_lock = threading.Lock()
 
 
 def wrap_queued_call(func):
+    '''
+    The purpose of this code is to ensure that calls to the wrapped function func are executed in a thread-safe manner, meaning that multiple threads can call the function concurrently without interfering with each other. 
+    '''
     def f(*args, **kwargs):
         with queue_lock:
             res = func(*args, **kwargs)

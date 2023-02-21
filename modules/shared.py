@@ -272,6 +272,9 @@ interrogator = modules.interrogate.InterrogateModels("interrogate")
 face_restorers = []
 
 class OptionInfo:
+    '''
+    data structure used in options
+    '''
     def __init__(self, default=None, label="", component=None, component_args=None, onchange=None, section=None, refresh=None):
         self.default = default
         self.label = label

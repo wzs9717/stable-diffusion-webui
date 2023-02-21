@@ -37,6 +37,7 @@ class ModelDef(BaseModel):
 
 class PydanticModelGenerator:
     """
+    wrap the model innto PydanticModel
     Takes in created classes and stubs them out in a way FastAPI/Pydantic is happy about:
     source_data is a snapshot of the default values produced by the class
     params are the names of the actual keys required by __init__

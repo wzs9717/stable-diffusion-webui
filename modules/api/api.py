@@ -27,18 +27,21 @@ import piexif
 import piexif.helper
 
 def upscaler_to_index(name: str):
+    '''name to index'''
     try:
         return [x.name.lower() for x in shared.sd_upscalers].index(name.lower())
     except:
         raise HTTPException(status_code=400, detail=f"Invalid upscaler, needs to be one of these: {' , '.join([x.name for x in sd_upscalers])}")
 
 def script_name_to_index(name, scripts):
+    '''name to index'''
     try:
         return [script.title().lower() for script in scripts].index(name.lower())
     except:
         raise HTTPException(status_code=422, detail=f"Script '{name}' not found")
 
 def validate_sampler_name(name):
+    '''validate if sampler exists'''
     config = sd_samplers.all_samplers_map.get(name, None)
     if config is None:
         raise HTTPException(status_code=404, detail="Sampler not found")
@@ -46,6 +49,7 @@ def validate_sampler_name(name):
     return name
 
 def setUpscalers(req: dict):
+    '''set upscalers from request'''
     reqDict = vars(req)
     reqDict['extras_upscaler_1'] = reqDict.pop('upscaler_1', None)
     reqDict['extras_upscaler_2'] = reqDict.pop('upscaler_2', None)
@@ -61,6 +65,7 @@ def decode_base64_to_image(encoding):
         raise HTTPException(status_code=500, detail="Invalid encoded image")
 
 def encode_pil_to_base64(image):
+    '''encode PIL image to base64'''
     with io.BytesIO() as output_bytes:
 
         if opts.samples_format.lower() == 'png':
@@ -123,7 +128,7 @@ class Api:
         self.app = app
         self.queue_lock = queue_lock
         api_middleware(self.app)
-        self.add_api_route("/sdapi/v1/txt2img", self.text2imgapi, methods=["POST"], response_model=TextToImageResponse)
+        self.add_api_route("/sdapi/v1/txt2img", self.text2imgapi, methods=["POST"], response_model=TextToImageResponse)#You can declare the type used for the response by annotating the path operation function return type.
         self.add_api_route("/sdapi/v1/img2img", self.img2imgapi, methods=["POST"], response_model=ImageToImageResponse)
         self.add_api_route("/sdapi/v1/extra-single-image", self.extras_single_image_api, methods=["POST"], response_model=ExtrasSingleImageResponse)
         self.add_api_route("/sdapi/v1/extra-batch-images", self.extras_batch_images_api, methods=["POST"], response_model=ExtrasBatchImagesResponse)
@@ -164,6 +169,7 @@ class Api:
         raise HTTPException(status_code=401, detail="Incorrect username or password", headers={"WWW-Authenticate": "Basic"})
 
     def get_script(self, script_name, script_runner):
+        '''Get script by script name'''
         if script_name is None:
             return None, None
 
@@ -175,7 +181,7 @@ class Api:
         script = script_runner.selectable_scripts[script_idx]
         return script, script_idx
 
-    def text2imgapi(self, txt2imgreq: StableDiffusionTxt2ImgProcessingAPI):
+    def text2imgapi(self, txt2imgreq: StableDiffusionTxt2ImgProcessingAPI):# StableDiffusionTxt2ImgProcessingAPI is a class. here used to validate the pydantic model
         script, script_idx = self.get_script(txt2imgreq.script_name, scripts.scripts_txt2img)
 
         populate = txt2imgreq.copy(update={ # Override __init__ params
@@ -191,6 +197,7 @@ class Api:
         args.pop('script_name', None)
 
         with self.queue_lock:
+            #here run model
             p = StableDiffusionProcessingTxt2Img(sd_model=shared.sd_model, **args)
 
             shared.state.begin()

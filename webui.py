@@ -84,6 +84,9 @@ Use --skip-version-check commandline argument to disable this check.
 
 
 def initialize():
+    '''
+    load models and update some opts
+    '''
     check_versions()
 
     extensions.list_extensions()
@@ -93,7 +96,7 @@ def initialize():
         shared.sd_upscalers = upscaler.UpscalerLanczos().scalers
         modules.scripts.load_scripts()
         return
-
+    #load all models
     modelloader.cleanup_models()
     modules.sd_models.setup_model()
     codeformer.setup_model(cmd_opts.codeformer_models_path)
@@ -116,7 +119,7 @@ def initialize():
         exit(1)
 
     shared.opts.data["sd_model_checkpoint"] = shared.sd_model.sd_checkpoint_info.title
-
+    #update opts threading safely
     shared.opts.onchange("sd_model_checkpoint", wrap_queued_call(lambda: modules.sd_models.reload_model_weights()))
     shared.opts.onchange("sd_vae", wrap_queued_call(lambda: modules.sd_vae.reload_vae_weights()), call=False)
     shared.opts.onchange("sd_vae_as_default", wrap_queued_call(lambda: modules.sd_vae.reload_vae_weights()), call=False)
@@ -124,6 +127,7 @@ def initialize():
 
     shared.reload_hypernetworks()
 
+    #load extra networks
     ui_extra_networks.intialize()
     ui_extra_networks.register_page(ui_extra_networks_textual_inversion.ExtraNetworksPageTextualInversion())
     ui_extra_networks.register_page(ui_extra_networks_hypernets.ExtraNetworksPageHypernetworks())
@@ -154,6 +158,7 @@ def initialize():
 
 
 def setup_cors(app):
+    '''setup Cross-Origin Resource Sharing '''
     if cmd_opts.cors_allow_origins and cmd_opts.cors_allow_origins_regex:
         app.add_middleware(CORSMiddleware, allow_origins=cmd_opts.cors_allow_origins.split(','), allow_origin_regex=cmd_opts.cors_allow_origins_regex, allow_methods=['*'], allow_credentials=True, allow_headers=['*'])
     elif cmd_opts.cors_allow_origins:
@@ -184,6 +189,11 @@ def api_only():
 
     app = FastAPI()
     setup_cors(app)
+    '''
+    app.add_middleware is a method in FastAPI, a Python web framework, used to add middleware to an application. 
+    Middleware is code that sits between the server and the application, and can modify incoming requests and 
+    outgoing responses.
+    '''
     app.add_middleware(GZipMiddleware, minimum_size=1000)
     api = create_api(app)
 
@@ -207,6 +217,7 @@ def webui():
         if cmd_opts.gradio_queue:
             shared.demo.queue(64)
 
+        # it reads in credentials for Gradio auth
         gradio_auth_creds = []
         if cmd_opts.gradio_auth:
             gradio_auth_creds += cmd_opts.gradio_auth.strip('"').replace('\n', '').split(',')
@@ -215,7 +226,7 @@ def webui():
                 for line in file.readlines():
                     gradio_auth_creds += [x.strip() for x in line.split(',')]
 
-        app, local_url, share_url = shared.demo.launch(
+        app, local_url, share_url = shared.demo(
             share=cmd_opts.share,
             server_name=server_name,
             server_port=cmd_opts.port,
@@ -239,6 +250,7 @@ def webui():
 
         app.add_middleware(GZipMiddleware, minimum_size=1000)
 
+        # reloads some modules
         modules.progress.setup_progress_api(app)
 
         if launch_api:
@@ -270,6 +282,7 @@ def webui():
 
         shared.reload_hypernetworks()
 
+        #registers some additional pages for the user interface. 
         ui_extra_networks.intialize()
         ui_extra_networks.register_page(ui_extra_networks_textual_inversion.ExtraNetworksPageTextualInversion())
         ui_extra_networks.register_page(ui_extra_networks_hypernets.ExtraNetworksPageHypernetworks())
