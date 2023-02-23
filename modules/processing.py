@@ -602,7 +602,7 @@ def process_images_inner(p: StableDiffusionProcessing) -> Processed:
             if len(prompts) == 0:
                 break
 
-            prompts, extra_network_data = extra_networks.parse_prompts(prompts)
+            prompts, extra_network_data = extra_networks.parse_prompts(prompts)#like LORA
 
             if not p.disable_extra_networks:
                 with devices.autocast():

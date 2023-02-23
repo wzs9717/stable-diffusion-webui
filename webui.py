@@ -185,6 +185,12 @@ def wait_on_server(demo=None):
 
 
 def api_only():
+    '''
+    problems:
+    1.name,logo
+    2.security when deploy: use cloud,dont put any privacy to cloud
+    3.problems when host the web,need a architecture considering data storage, ranking, 
+    '''
     initialize()
 
     app = FastAPI()
